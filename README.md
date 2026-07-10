@@ -17,7 +17,7 @@ This project was built to understand how to design highly scalable, fault-tolera
 ## Project structure
 
 ```text
-Emain-Sending-Mechanism/
+scalable-email-sending/
 ├── redis.js        # Configures the ioredis connection pool
 ├── queue.js        # Initializes the BullMQ producer queue
 ├── worker.js       # Listens to Redis and handles the email-sending worker
