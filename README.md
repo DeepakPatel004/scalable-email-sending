@@ -115,3 +115,43 @@ curl -X POST http://localhost:3000/signup \
 Starting job: email (ID: 1)
 Email sent successfully to johndoe@example.com
 ```
+
+
+
+## 📌 Core Concepts & Architecture
+
+### Producer (Queue) vs. Consumer (Worker)
+In a scalable backend, heavy tasks (like email sending, video processing, or PDF generation) are offloaded from the main API thread to a background worker using a message queue.
+
+* **Queue (Producer)**: Responsible for **adding jobs** to the queue in Redis. It does not run the job; it only writes the payload and configuration metadata.
+* **Worker (Consumer)**: A background process that continuously polls Redis, **fetches jobs**, executes the heavy tasks, and updates their status.
+
+```text
+                        ┌───────────────────┐
+                        │      Client       │
+                        └─────────┬─────────┘
+                                  │ (HTTP POST Request)
+                                  ▼
+                        ┌───────────────────┐
+                        │  Express API Web  │ (Producer)
+                        │      Server       │
+                        └─────────┬─────────┘
+                                  │ queue.add("email", data)
+                                  ▼
+┌──────────────────────────────────────────────────────────────┐
+│                        Redis Database                        │
+│                                                              │
+│  [Wait Queue] ──► [Active Queue] ──► [Completed / Failed]   │
+└──────────────────────────────┬───────────────────────────────┘
+                               │
+                               │ Worker fetches next job
+                               ▼
+                        ┌───────────────────┐
+                        │  Worker Process   │ (Consumer)
+                        └─────────┬─────────┘
+                                  │ executes transporter.sendMail()
+                                  ▼
+                        ┌───────────────────┐
+                        │    User Email     │
+                        └───────────────────┘
+```
